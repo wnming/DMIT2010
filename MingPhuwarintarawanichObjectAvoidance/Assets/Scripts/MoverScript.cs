@@ -3,6 +3,7 @@ using System.Collections.Generic;
 //using System.Diagnostics;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.UIElements;
 using static UnityEngine.GraphicsBuffer;
 
 public class MoverScript : MonoBehaviour
@@ -12,7 +13,12 @@ public class MoverScript : MonoBehaviour
 
     bool isLeft, isRight;
 
-    float range = 8;
+    float initialRange = 10.0f;
+
+    float hunterRange = 10.0f;
+    float speedBoostRange = 10.0f;
+    float disguiseItemRange = 10.0f;
+    //8;
 
     RaycastHit hit;
 
@@ -24,8 +30,18 @@ public class MoverScript : MonoBehaviour
 
     public bool isInvisible = false;
 
-    //[SerializeField] List<GameObject> collectables;
-    //[SerializeField] GameObject target;
+    private bool isRotating = false;
+
+    bool isHunterInRange = false;
+
+    //[SerializeField] List<GameObject> hunters;
+    //[SerializeField] GameObject hunter;
+
+    [SerializeField] List<GameObject> speedBoosts;
+    GameObject speedBoost;
+
+    [SerializeField] List<GameObject> disguiseItems;
+    GameObject disguiseItem;
 
     // Start is called before the first frame update
     void Start()
@@ -38,47 +54,96 @@ public class MoverScript : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //CheckTargets();
-
         AvoidWalls();
-        //GetAwayFromHunter();
-        transform.Translate(direction * movementSpeed * Time.deltaTime);
-        GetAwayFromHunter();
+
+        if (!isHunterInRange)
+        {
+            FollowDisguiseItem();
+            FollowSpeedBoost();
+        }
+
+        transform.Translate(Vector3.forward * movementSpeed * Time.deltaTime);
     }
 
+    bool CheckInRange(GameObject hunter)
+    {
+        RaycastHit outHit;
+        if (Physics.Raycast(transform.position, hunter.transform.position - transform.position, out outHit, 10.0f))
+        {
+            return true;
+            ////&& !isRotating
+            //if (hit.transform.tag != "Wall")
+            //{
+            //    if (hit.transform.tag == "Hunter")
+            //    {
+            //        isHunterInRange = true;
+            //        Vector3 direction = transform.position - hit.transform.position;
+            //        direction.y = 0;
+            //        transform.rotation = Quaternion.LookRotation(direction.normalized);
+            //        //transform.rotation = hunter.transform.rotation;
+            //    }
+            //}
+        }
+        return false;
+    }
+
+    //private void OnTriggerStay(Collider other)
+    //{
+    //    isHunterInRange = false;
+    //    if (other.gameObject.tag == "Hunter" && CheckInRange(other.gameObject))
+    //    {
+    //        isHunterInRange = true;
+    //        Vector3 direction = transform.position - other.gameObject.transform.position;
+    //        direction.y = 0;
+    //        transform.rotation = Quaternion.LookRotation(direction.normalized);
+
+    //        if (Vector3.Distance(other.gameObject.transform.position, transform.position) < 2.0f && !isInvisible)
+    //        {
+    //            gameObject.SetActive(false);
+    //        }
+    //        //gameObject.SetActive(false);
+    //    }
+    //}
     private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.tag == "Runner")
+        isHunterInRange = false;
+        if (other.gameObject.tag == "Hunter" && CheckInRange(other.gameObject))
         {
-            gameObject.GetComponent<BoxCollider>().enabled = false;
+            isHunterInRange = true;
+            Vector3 direction = transform.position - other.gameObject.transform.position;
+            direction.y = 0;
+            transform.rotation = Quaternion.LookRotation(direction.normalized);
+
+            if(Vector3.Distance(other.gameObject.transform.position, transform.position) < 2.0f && !isInvisible)
+            {
+                gameObject.SetActive(false);
+            }
+            //gameObject.SetActive(false);
         }
-        if (other.gameObject.tag == "Hunter" && !isInvisible)
-        {
-            gameObject.SetActive(false);
-        }
-        if(other.gameObject.tag == "SpeedBoost")
-        {
-            other.gameObject.SetActive(false);
-            StartCoroutine(ChangeSpeed());
-        }
-        if (other.gameObject.tag == "DisguiseItem")
-        {
-            other.gameObject.SetActive(false);
-            isInvisible = true;
-            StartCoroutine(Invisible());
-        }
+        //if (other.gameObject.tag == "SpeedBoost")
+        //{
+        //    other.gameObject.SetActive(false);
+        //    StartCoroutine(ChangeSpeed());
+        //}
+        //if (other.gameObject.tag == "DisguiseItem")
+        //{
+        //    other.gameObject.SetActive(false);
+        //    isInvisible = true;
+        //    StartCoroutine(Invisible());
+        //}
     }
 
-    private void OnTriggerExit(Collider other)
-    {
-        if (other.gameObject.tag == "Runner")
-        {
-            gameObject.GetComponent<BoxCollider>().enabled = true;
-        }
-    }
+    //private void OnTriggerExit(Collider other)
+    //{
+    //    if (other.gameObject.tag == "Wall")
+    //    {
+    //        //isRotating = false;
+    //    }
+    //}
 
     IEnumerator Invisible()
     {
+        isInvisible = true;
         transform.Find("Rabbit").GetComponent<Renderer>().material.color = Color.red;
         yield return new WaitForSeconds(7);
         transform.Find("Rabbit").GetComponent<Renderer>().material.color = Color.white;
@@ -94,11 +159,12 @@ public class MoverScript : MonoBehaviour
 
     void AvoidWalls()
     {
+        //isRotating = false;
         if (Physics.BoxCast(transform.position, new Vector3(0.5f, 0.5f, 0.5f), transform.forward, out hit, Quaternion.identity, forwardDist))
         {
             if (hit.transform.gameObject.tag == "Wall")
             {
-
+                //isRotating = true;
                 // Rotate based on what is to the sides
                 isLeft = Physics.Raycast(transform.position, -transform.right, sideDist);
                 isRight = Physics.Raycast(transform.position, transform.right, sideDist);
@@ -128,156 +194,245 @@ public class MoverScript : MonoBehaviour
                         transform.Rotate(Vector3.up, -90);
                     }
                 }
+                //}
+                //else
+                //{
+                //    isRotating = false;
+                //}
             }
         }
     }
 
-    void GetAwayFromHunter()
+    void FollowDisguiseItem()
     {
-        if (!isInvisible) 
+        disguiseItemRange = initialRange;
+        for (int i = 0; i < disguiseItems.Count; i++)
         {
-            if (Physics.Raycast(transform.position, transform.forward, out RaycastHit hit, range))
+            if (Vector3.Distance(transform.position, disguiseItems[i].transform.position) < disguiseItemRange)
             {
-                isBeingFollowed = false;
-                GameObject hitObj = hit.collider.gameObject;
-                if (hitObj.tag == "Hunter")
+                disguiseItemRange = Vector3.Distance(transform.position, disguiseItems[i].transform.position);
+                disguiseItem = disguiseItems[i];
+            }
+        }
+        if (disguiseItem != null)
+        {
+            if (disguiseItem.gameObject.activeSelf)
+            {
+                if (Physics.BoxCast(transform.position, new Vector3(0.5f, 0.5f, 0.5f), disguiseItem.transform.position - transform.position, out hit, Quaternion.identity))
                 {
-                    Debug.DrawRay(transform.position, transform.forward * hit.distance, Color.yellow);
-                    transform.LookAt(transform.position + (transform.position - hitObj.transform.position));
-                    isBeingFollowed = true;
-                }
-                else
-                {
-                    if (hitObj.tag == "DisguiseItem" && !isBeingFollowed)
+                    if (hit.transform.tag != "Wall") 
                     {
-                        transform.LookAt(hitObj.transform.position);
-                    }
-                    else
-                    {
-                        if (hitObj.tag == "SpeedBoost" && !isBeingFollowed)
+                        if (hit.transform.tag == "DisguiseItem")
                         {
-                            transform.LookAt(hitObj.transform.position);
+                            transform.rotation = Quaternion.LookRotation(Vector3.RotateTowards(transform.forward, hit.transform.position - transform.position, 1, 1));
+                        }
+                        if (Vector3.Distance(hit.transform.position, transform.position) < 2.0f && hit.transform.tag == "DisguiseItem")
+                        {
+                            StartCoroutine(Invisible());
+                            disguiseItem.SetActive(false);
+                            disguiseItem = null;
+                            for (int i = 0; i < disguiseItems.Count; i++)
+                            {
+                                if (disguiseItem == speedBoosts[i])
+                                {
+                                    disguiseItems.RemoveAt(i);
+                                }
+                            }
                         }
                     }
                 }
             }
-            if (Physics.Raycast(transform.position, -transform.forward, out RaycastHit hit2, range))
+            else
             {
-                GameObject hitObj = hit2.collider.gameObject;
-                if (hitObj.tag == "Hunter")
-                {
-                    Debug.DrawRay(transform.position, -transform.forward * hit.distance, Color.yellow);
-                    transform.LookAt(transform.position + (transform.position - hitObj.transform.position));
-                    isBeingFollowed = true;
-                    //transform.rotation = Quaternion.LookRotation(transform.position - hitObj.transform.position);
-                }
-                else
-                {
-                    if (hitObj.tag == "DisguiseItem" && !isBeingFollowed)
-                    {
-                        transform.LookAt(hitObj.transform.position);
-                    }
-                    else
-                    {
-                        if (hitObj.tag == "SpeedBoost" && !isBeingFollowed)
-                        {
-                            transform.LookAt(hitObj.transform.position);
-                        }
-                    }
-                }
-            }
-            if (Physics.Raycast(transform.position, transform.right, out RaycastHit hit3, range))
-            {
-                GameObject hitObj = hit3.collider.gameObject;
-                if (hitObj.tag == "Hunter")
-                {
-                    Debug.DrawRay(transform.position, transform.right * hit.distance, Color.yellow);
-                    transform.LookAt(transform.position + (transform.position - hitObj.transform.position));
-                    isBeingFollowed = true;
-                    //transform.rotation = Quaternion.LookRotation(transform.position - hitObj.transform.position);
-                }
-                else
-                {
-                    if (hitObj.tag == "DisguiseItem" && !isBeingFollowed)
-                    {
-                        transform.LookAt(hitObj.transform.position);
-                    }
-                    else
-                    {
-                        if (hitObj.tag == "SpeedBoost" && !isBeingFollowed)
-                        {
-                            transform.LookAt(hitObj.transform.position);
-                        }
-                    }
-                }
-            }
-            if (Physics.Raycast(transform.position, -transform.right, out RaycastHit hit4, range))
-            {
-                GameObject hitObj = hit4.collider.gameObject;
-                if (hitObj.tag == "Hunter")
-                {
-                    Debug.DrawRay(transform.position, -transform.right * hit.distance, Color.yellow);
-                    transform.LookAt(transform.position + (transform.position - hitObj.transform.position));
-                    isBeingFollowed = true;
-                }
-                else
-                {
-                    if (hitObj.tag == "DisguiseItem" && !isBeingFollowed)
-                    {
-                        transform.LookAt(hitObj.transform.position);
-                    }
-                    else
-                    {
-                        if (hitObj.tag == "SpeedBoost" && !isBeingFollowed)
-                        {
-                            transform.LookAt(hitObj.transform.position);
-                        }
-                    }
-                }
+                disguiseItem = null;
             }
         }
     }
+
+    void FollowSpeedBoost()
+    {
+        speedBoostRange = initialRange;
+        for (int i = 0; i < speedBoosts.Count; i++)
+        {
+            if (Vector3.Distance(transform.position, speedBoosts[i].transform.position) < speedBoostRange)
+            {
+                speedBoostRange = Vector3.Distance(transform.position, speedBoosts[i].transform.position);
+                speedBoost = speedBoosts[i];
+            }
+        }
+        if (speedBoost != null)
+        {
+            if (speedBoost.gameObject.activeSelf)
+            {
+                if (Physics.BoxCast(transform.position, new Vector3(0.5f, 0.5f, 0.5f), speedBoost.transform.position - transform.position, out hit, Quaternion.identity))
+                {
+                    if (hit.transform.tag != "Wall") 
+                    {
+                        if (hit.transform.tag == "SpeedBoost")
+                        {
+                            transform.rotation = Quaternion.LookRotation(Vector3.RotateTowards(transform.forward, speedBoost.transform.position - transform.position, 1, 1));
+                        }
+                        if (Vector3.Distance(speedBoost.transform.position, transform.position) < 2.0f && hit.transform.tag == "SpeedBoost")
+                        {
+                            StartCoroutine(ChangeSpeed());
+                            speedBoost.SetActive(false);
+                            speedBoost = null;
+                            for (int i = 0; i < speedBoosts.Count; i++)
+                            {
+                                if (speedBoost == speedBoosts[i])
+                                {
+                                    speedBoosts.RemoveAt(i);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                speedBoost = null;
+            }
+        }
+    }
+
+    //bool GetAwayFromHunter()
+    //{
+    //    hunterRange = initialRange;
+    //    bool isHunterInRange = false;
+    //    for (int i = 0; i < hunters.Count; i++)
+    //    {
+    //        if (Vector3.Distance(transform.position, hunters[i].transform.position) < hunterRange)
+    //        {
+    //            hunterRange = Vector3.Distance(transform.position, hunters[i].transform.position);
+    //            hunter = hunters[i];
+    //        }
+    //    }
+    //    if (hunter != null)
+    //    {
+    //        if (hunter.gameObject.activeSelf)
+    //        {
+    //            if (Physics.BoxCast(transform.position, new Vector3(0.5f, 0.5f, 0.5f), hunter.transform.position - transform.position, out hit, Quaternion.identity))
+    //            {
+    //                //&& !isRotating
+    //                if (hit.transform.tag != "Wall") 
+    //                {
+    //                    if (hit.transform.tag == "Hunter")
+    //                    {
+    //                        isHunterInRange = true;
+    //                        Vector3 direction = transform.position - hit.transform.position;
+    //                        direction.y = 0;
+    //                        transform.rotation = Quaternion.LookRotation(direction.normalized);
+    //                        //transform.rotation = hunter.transform.rotation;
+    //                    }
+    //                }
+    //            }
+    //        }
+    //        else
+    //        {
+    //            hunter = null;
+    //        }
+    //    }
+    //    //Debug.Log(hunterRange);
+    //    return isHunterInRange;
+    //}
     void CheckTargets()
     {
-        //float distance = 10000.0f;
-
-        //for (int i = 0; i < collectables.Count; i++)
+        //if (Physics.Raycast(transform.position, transform.forward, out RaycastHit hit, range))
         //{
-        //    if (Vector3.Distance(transform.position, collectables[i].transform.position) < distance)
+        //    GameObject hitObj = hit.collider.gameObject;
+        //    if (hitObj.tag == "Hunter")
         //    {
-        //        distance = Vector3.Distance(transform.position, collectables[i].transform.position);
-        //        target = collectables[i];
-        //    }
-        //}
-
-        //if (target != null)
-        //{
-        //    if (target.gameObject.activeSelf)
-        //    {
-        //        if (Physics.BoxCast(transform.position, new Vector3(0.5f, 0.5f, 0.5f), target.transform.position - transform.position, out hit, Quaternion.identity))
-        //        {
-        //            if (hit.transform.tag != "Wall")
-        //            {
-        //                transform.rotation = Quaternion.LookRotation(Vector3.RotateTowards(transform.forward, target.transform.position - transform.position, 1, 1));
-        //            }
-
-        //            if (Vector3.Distance(target.transform.position, transform.position) < 2.0f)
-        //            {
-        //                target.SetActive(false);
-        //                target = null;
-        //                for (int i = 0; i < collectables.Count; i++)
-        //                {
-        //                    if (target == collectables[i])
-        //                    {
-        //                        collectables.RemoveAt(i);
-        //                    }
-        //                }
-        //            }
-        //        }
+        //        Debug.DrawRay(transform.position, transform.forward * hit.distance, Color.yellow);
+        //        transform.LookAt(transform.position + (transform.position - hitObj.transform.position));
+        //        isBeingFollowed = true;
         //    }
         //    else
         //    {
-        //        target = null;
+        //        if (hitObj.tag == "DisguiseItem" && !isBeingFollowed)
+        //        {
+        //            transform.LookAt(hitObj.transform.position);
+        //        }
+        //        else
+        //        {
+        //            if (hitObj.tag == "SpeedBoost" && !isBeingFollowed)
+        //            {
+        //                transform.LookAt(hitObj.transform.position);
+        //            }
+        //        }
+        //    }
+        //}
+        //if (Physics.Raycast(transform.position, -transform.forward, out RaycastHit hit2, range))
+        //{
+        //    GameObject hitObj = hit2.collider.gameObject;
+        //    if (hitObj.tag == "Hunter")
+        //    {
+        //        Debug.DrawRay(transform.position, -transform.forward * hit.distance, Color.yellow);
+        //        transform.LookAt(transform.position + (transform.position - hitObj.transform.position));
+        //        isBeingFollowed = true;
+        //        //transform.rotation = Quaternion.LookRotation(transform.position - hitObj.transform.position);
+        //    }
+        //    else
+        //    {
+        //        if (hitObj.tag == "DisguiseItem" && !isBeingFollowed)
+        //        {
+        //            transform.LookAt(hitObj.transform.position);
+        //        }
+        //        else
+        //        {
+        //            if (hitObj.tag == "SpeedBoost" && !isBeingFollowed)
+        //            {
+        //                transform.LookAt(hitObj.transform.position);
+        //            }
+        //        }
+        //    }
+        //}
+        //if (Physics.Raycast(transform.position, transform.right, out RaycastHit hit3, range))
+        //{
+        //    GameObject hitObj = hit3.collider.gameObject;
+        //    if (hitObj.tag == "Hunter")
+        //    {
+        //        Debug.DrawRay(transform.position, transform.right * hit.distance, Color.yellow);
+        //        transform.LookAt(transform.position + (transform.position - hitObj.transform.position));
+        //        isBeingFollowed = true;
+        //        //transform.rotation = Quaternion.LookRotation(transform.position - hitObj.transform.position);
+        //    }
+        //    else
+        //    {
+        //        if (hitObj.tag == "DisguiseItem" && !isBeingFollowed)
+        //        {
+        //            transform.LookAt(hitObj.transform.position);
+        //        }
+        //        else
+        //        {
+        //            if (hitObj.tag == "SpeedBoost" && !isBeingFollowed)
+        //            {
+        //                transform.LookAt(hitObj.transform.position);
+        //            }
+        //        }
+        //    }
+        //}
+        //if (Physics.Raycast(transform.position, -transform.right, out RaycastHit hit4, range))
+        //{
+        //    GameObject hitObj = hit4.collider.gameObject;
+        //    if (hitObj.tag == "Hunter")
+        //    {
+        //        Debug.DrawRay(transform.position, -transform.right * hit.distance, Color.yellow);
+        //        transform.LookAt(transform.position + (transform.position - hitObj.transform.position));
+        //        isBeingFollowed = true;
+        //    }
+        //    else
+        //    {
+        //        if (hitObj.tag == "DisguiseItem" && !isBeingFollowed)
+        //        {
+        //            transform.LookAt(hitObj.transform.position);
+        //        }
+        //        else
+        //        {
+        //            if (hitObj.tag == "SpeedBoost" && !isBeingFollowed)
+        //            {
+        //                transform.LookAt(hitObj.transform.position);
+        //            }
+        //        }
         //    }
         //}
     }
