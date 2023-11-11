@@ -90,7 +90,7 @@ public class MoverScript : MonoBehaviour
     //private void OnTriggerStay(Collider other)
     //{
     //    isHunterInRange = false;
-    //    if (other.gameObject.tag == "Hunter" && CheckInRange(other.gameObject))
+    //    if (other.gameObject.tag == "Hunter" && CheckInRange(other.gameObject) && !isRotating)
     //    {
     //        isHunterInRange = true;
     //        Vector3 direction = transform.position - other.gameObject.transform.position;
@@ -106,19 +106,21 @@ public class MoverScript : MonoBehaviour
     //}
     private void OnTriggerEnter(Collider other)
     {
-        isHunterInRange = false;
         if (other.gameObject.tag == "Hunter" && CheckInRange(other.gameObject))
         {
             isHunterInRange = true;
             Vector3 direction = transform.position - other.gameObject.transform.position;
             direction.y = 0;
             transform.rotation = Quaternion.LookRotation(direction.normalized);
-
-            if(Vector3.Distance(other.gameObject.transform.position, transform.position) < 2.0f && !isInvisible)
-            {
-                gameObject.SetActive(false);
-            }
+            //if(Vector3.Distance(other.gameObject.transform.position, transform.position) < 2.0f && !isInvisible)
+            //{
+            //    gameObject.SetActive(false);
+            //}
             //gameObject.SetActive(false);
+        }
+        else
+        {
+            isHunterInRange = false;
         }
         //if (other.gameObject.tag == "SpeedBoost")
         //{
@@ -159,12 +161,12 @@ public class MoverScript : MonoBehaviour
 
     void AvoidWalls()
     {
-        //isRotating = false;
+        isRotating = false;
         if (Physics.BoxCast(transform.position, new Vector3(0.5f, 0.5f, 0.5f), transform.forward, out hit, Quaternion.identity, forwardDist))
         {
             if (hit.transform.gameObject.tag == "Wall")
             {
-                //isRotating = true;
+                isRotating = true;
                 // Rotate based on what is to the sides
                 isLeft = Physics.Raycast(transform.position, -transform.right, sideDist);
                 isRight = Physics.Raycast(transform.position, transform.right, sideDist);

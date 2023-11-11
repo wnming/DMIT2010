@@ -76,27 +76,38 @@ public class Hunter : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        isPlayerInRange = false;
         if (other.gameObject.tag == "Runner" && CheckInRange(other.gameObject))
         {
-            Debug.Log("in range");
             isPlayerInRange = true;
             transform.rotation = Quaternion.LookRotation(Vector3.RotateTowards(transform.forward, other.gameObject.transform.position - transform.position, 1, 1));
-
+            if (Vector3.Distance(other.gameObject.transform.position, transform.position) < 2.0f)
+            {
+                other.gameObject.SetActive(false);
+            }
+        }
+        else
+        {
+            isPlayerInRange = false;
         }
     }
 
-    //private void OnTriggerStay(Collider other)
-    //{
-    //    isPlayerInRange = false;
-    //    if (other.gameObject.tag == "Runner" && CheckInRange(other.gameObject))
-    //    {
-    //        Debug.Log("in range");
-    //        isPlayerInRange = true;
-    //        transform.rotation = Quaternion.LookRotation(Vector3.RotateTowards(transform.forward, other.gameObject.transform.position - transform.position, 1, 1));
-
-    //    }
-    //}
+    private void OnTriggerStay(Collider other)
+    {
+        isPlayerInRange = false;
+        if (other.gameObject.tag == "Runner" && CheckInRange(other.gameObject))
+        {
+            isPlayerInRange = true;
+            transform.rotation = Quaternion.LookRotation(Vector3.RotateTowards(transform.forward, other.gameObject.transform.position - transform.position, 1, 1));
+            if (Vector3.Distance(other.gameObject.transform.position, transform.position) < 2.0f)
+            {
+                other.gameObject.SetActive(false);
+            }
+        }
+        else
+        {
+            isPlayerInRange = false;
+        }
+    }
 
     IEnumerator ChangeSpeed()
     {
@@ -178,7 +189,7 @@ public class Hunter : MonoBehaviour
             {
                 if (Physics.BoxCast(transform.position, new Vector3(0.5f, 0.5f, 0.5f), speedBoost.transform.position - transform.position, out hit, Quaternion.identity))
                 {
-                    if (hit.transform.tag != "Wall") 
+                    if (hit.transform.tag != "Wall")
                     {
                         if (hit.transform.tag == "SpeedBoost")
                         {
