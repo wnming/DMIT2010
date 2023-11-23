@@ -74,10 +74,10 @@ public class SpyPath : MonoBehaviour
     {
         if (other.gameObject.tag == "Guard" && isReadyToInvisible)
         {
-            StartCoroutine(InvisibleCounter());
-            StartCoroutine(ReadyToInvisibleCounter());
+            //StartCoroutine(InvisibleCounter());
+            //StartCoroutine(ReadyToInvisibleCounter());
         }
-        if (other.gameObject.tag == "Guard" && isMoving && other.gameObject.tag == "Document" && Vector3.Distance(transform.position, other.gameObject.transform.position) < 2.0f)
+        if (other.gameObject.tag == "Guard" && isMoving && Vector3.Distance(transform.position, other.gameObject.transform.position) < 2.0f)
         {
             StartCoroutine(JailCounter());
         }
@@ -92,7 +92,7 @@ public class SpyPath : MonoBehaviour
             //Debug.Log(Vector3.Distance(transform.position, other.gameObject.transform.position));
             other.gameObject.SetActive(false);
         }
-        if (other.gameObject.tag == "Guard" && isMoving && other.gameObject.tag == "Document" && Vector3.Distance(transform.position, other.gameObject.transform.position) < 2.0f)
+        if (other.gameObject.tag == "Guard" && isMoving && Vector3.Distance(transform.position, other.gameObject.transform.position) < 2.0f)
         {
             StartCoroutine(JailCounter());
         }
@@ -100,15 +100,19 @@ public class SpyPath : MonoBehaviour
 
     IEnumerator JailCounter()
     {
+        stateText.text = "In jail";
         transform.position = jailPosition.transform.position;
         isMoving = false;
         yield return new WaitForSeconds(8.0f);
         isMoving = true;
         transform.position = initialStartNode.transform.position;
+        currentNode = initialStartNode;
+        nextNode = currentNode;
     }
 
     IEnumerator InvisibleCounter()
     {
+        stateText.text = "Invisible";
         isMoving = false;
         yield return new WaitForSeconds(4.0f);
         isMoving = true;
@@ -159,10 +163,6 @@ public class SpyPath : MonoBehaviour
                 {
                     stateText.text = "Spying";
                     transform.Translate((nextNode.transform.position - transform.position).normalized * movementSpeed * Time.deltaTime);
-                }
-                else
-                {
-                    stateText.text = "Invisible";
                 }
             }
         }

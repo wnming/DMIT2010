@@ -1808,7 +1808,7 @@ MonoBehaviour:
   startNode: {fileID: 1893846161}
   destinationNode: {fileID: 39721592}
   previousNode: {fileID: 0}
-  jailPosition: {fileID: 0}
+  jailPosition: {fileID: 808968298}
   movementSpeed: 4
   isRedSpy: 1
   stateText: {fileID: 298937582}
@@ -5857,7 +5857,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 808968298}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -33.3, y: -27.87304, z: 20.524454}
+  m_LocalPosition: {x: -29.22, y: 0, z: 10.39}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
