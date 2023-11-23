@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.InputSystem.HID;
 
 public class Pathfinder : MonoBehaviour
 {
@@ -10,6 +11,8 @@ public class Pathfinder : MonoBehaviour
     [SerializeField] float movementSpeed;
 
     [SerializeField] GameObject secondDestination;
+
+    //[SerializeField] Rigidbody rb;
 
     private GameObject initialDestinationNode;
     private GameObject initialStartNode;
@@ -79,12 +82,17 @@ public class Pathfinder : MonoBehaviour
                 {
                     if (!currentPathNode.door.isDoorLocked)
                     {
+                        //transform.LookAt((nextNode.transform.position - transform.position).normalized);
+
                         transform.Translate((nextNode.transform.position - transform.position).normalized * movementSpeed * Time.deltaTime);
                     }
                 }
                 else
                 {
+                    //transform.LookAt((nextNode.transform.position - transform.position).normalized);
+
                     transform.Translate((nextNode.transform.position - transform.position).normalized * movementSpeed * Time.deltaTime);
+
                 }
             }
         }
