@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem.HID;
@@ -12,10 +13,14 @@ public class Pathfinder : MonoBehaviour
 
     [SerializeField] GameObject secondDestination;
 
+    [SerializeField] TextMeshProUGUI stateText; 
+
     //[SerializeField] Rigidbody rb;
 
     private GameObject initialDestinationNode;
     private GameObject initialStartNode;
+
+    public bool isMoving;
 
     // Start is called before the first frame update
     void Start()
@@ -26,11 +31,35 @@ public class Pathfinder : MonoBehaviour
         initialDestinationNode = destinationNode;
 
         transform.position = currentNode.transform.position;
+
+        isMoving = true;
+    }
+
+    public IEnumerator BlindFoldOn()
+    {
+        isMoving = false;
+        stateText.text = "Blind fold";
+        yield return new WaitForSeconds(4.0f);
+        isMoving = true;
+    }
+
+    public IEnumerator DeplayAfterCapture()
+    {
+        isMoving = false;
+        stateText.text = "Capturing";
+        yield return new WaitForSeconds(2.0f);
+        stateText.text = "Not moving";
+        yield return new WaitForSeconds(2.0f);
+        isMoving = true;
     }
 
     // Update is called once per frame
     void Update()
     {
+        if (isMoving)
+        {
+            stateText.text = "Patrolling";
+        }
         if (currentNode == destinationNode)
         {
             if(destinationNode == initialStartNode) 
@@ -76,23 +105,26 @@ public class Pathfinder : MonoBehaviour
             }
             else
             {
-                Pathnode currentPathNode = currentNode.GetComponent<Pathnode>();
-                Pathnode nextPathNode = nextNode.GetComponent<Pathnode>();
-                if (currentPathNode.door != null && nextPathNode.door != null)
+                if (isMoving)
                 {
-                    if (!currentPathNode.door.isDoorLocked)
+                    Pathnode currentPathNode = currentNode.GetComponent<Pathnode>();
+                    Pathnode nextPathNode = nextNode.GetComponent<Pathnode>();
+                    if (currentPathNode.door != null && nextPathNode.door != null)
+                    {
+                        if (!currentPathNode.door.isDoorLocked)
+                        {
+                            //transform.LookAt((nextNode.transform.position - transform.position).normalized);
+
+                            transform.Translate((nextNode.transform.position - transform.position).normalized * movementSpeed * Time.deltaTime);
+                        }
+                    }
+                    else
                     {
                         //transform.LookAt((nextNode.transform.position - transform.position).normalized);
 
                         transform.Translate((nextNode.transform.position - transform.position).normalized * movementSpeed * Time.deltaTime);
+
                     }
-                }
-                else
-                {
-                    //transform.LookAt((nextNode.transform.position - transform.position).normalized);
-
-                    transform.Translate((nextNode.transform.position - transform.position).normalized * movementSpeed * Time.deltaTime);
-
                 }
             }
         }

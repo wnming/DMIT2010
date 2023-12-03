@@ -1,9 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.HID;
 
 public class SpyPath : MonoBehaviour
@@ -22,7 +24,9 @@ public class SpyPath : MonoBehaviour
     private bool isMoving;
     private bool isReadyToInvisible;
 
-    private int document;
+    private bool isReadytoStopTheGuard;
+
+    public int document;
 
     private List<GameObject> destinationList = new List<GameObject>();
 
@@ -37,11 +41,19 @@ public class SpyPath : MonoBehaviour
     {
         isMoving = true;
         isReadyToInvisible = true;
+        isReadytoStopTheGuard = true;
         currentNode = startNode;
         nextNode = currentNode;
         initialStartNode = startNode;
 
-        documentText.text = "Destroy: " + document + " doc(s)"; ;
+        if (isRedSpy)
+        {
+            documentText.text = "Destroy: " + document + " doc(s)";
+        }
+        else
+        {
+            documentText.text = "Hold: " + document + " doc(s)";
+        }
 
         transform.position = currentNode.transform.position;
 
@@ -58,13 +70,13 @@ public class SpyPath : MonoBehaviour
         }
         else
         {
-            destinationList.Add(yellowRoomDestinationNode);
-            destinationList.Add(purpleRoomDestinationNode);
-            destinationList.Add(orangeRoomDestinationNode);
             destinationList.Add(pinkRoomDestinationNode);
+            destinationList.Add(yellowRoomDestinationNode);
+            destinationList.Add(orangeRoomDestinationNode);
+            destinationList.Add(purpleRoomDestinationNode);
+            destinationList.Add(grayRoomDestinationNode);
             destinationList.Add(blueRoomDestinationNode);
             destinationList.Add(greenRoomDestinationNode);
-            destinationList.Add(grayRoomDestinationNode);
         }
 
         destinationNode = destinationList[index];
@@ -72,14 +84,38 @@ public class SpyPath : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.tag == "Guard" && isReadyToInvisible)
+        if (isRedSpy)
         {
-            //StartCoroutine(InvisibleCounter());
-            //StartCoroutine(ReadyToInvisibleCounter());
+            if (other.gameObject.tag == "Guard" && isReadyToInvisible)
+            {
+                StartCoroutine(InvisibleCounter());
+                StartCoroutine(ReadyToInvisibleCounter());
+            }
+        }
+        else
+        {
+            if (other.gameObject.tag == "Guard" && isReadytoStopTheGuard)
+            {
+                Pathfinder guardFinder = other.gameObject.GetComponentInParent<Pathfinder>();
+                if (guardFinder != null)
+                {
+                    StartCoroutine(guardFinder.BlindFoldOn());
+                    StartCoroutine(StopTheGuardCounter());
+                    StartCoroutine(ReadyToStopTheGuardCounter());
+                }
+            }
         }
         if (other.gameObject.tag == "Guard" && isMoving && Vector3.Distance(transform.position, other.gameObject.transform.position) < 2.0f)
         {
-            StartCoroutine(JailCounter());
+            Pathfinder guardFinder = other.gameObject.GetComponentInParent<Pathfinder>();
+            if(guardFinder != null)
+            {
+                if (guardFinder.isMoving)
+                {
+                    StartCoroutine(JailCounter());
+                    StartCoroutine(guardFinder.DeplayAfterCapture());
+                }
+            }
         }
     }
 
@@ -88,13 +124,29 @@ public class SpyPath : MonoBehaviour
         if (other.gameObject.tag == "Document" && Vector3.Distance(transform.position, other.gameObject.transform.position) < 2.0f)
         {
             document += 1;
-            documentText.text = "Destroy: " + document + " doc(s)";
+            if (isRedSpy)
+            {
+                documentText.text = "Destroy: " + document + " doc(s)";
+            }
+            else
+            {
+                documentText.text = "Hold: " + document + " doc(s)";
+            }
             //Debug.Log(Vector3.Distance(transform.position, other.gameObject.transform.position));
             other.gameObject.SetActive(false);
         }
         if (other.gameObject.tag == "Guard" && isMoving && Vector3.Distance(transform.position, other.gameObject.transform.position) < 2.0f)
         {
-            StartCoroutine(JailCounter());
+            Pathfinder guardFinder = other.gameObject.GetComponentInParent<Pathfinder>();
+            Debug.Log(guardFinder);
+            if (guardFinder != null)
+            {
+                if (guardFinder.isMoving)
+                {
+                    StartCoroutine(JailCounter());
+                    StartCoroutine(guardFinder.DeplayAfterCapture());
+                }
+            }
         }
     }
 
@@ -108,6 +160,22 @@ public class SpyPath : MonoBehaviour
         transform.position = initialStartNode.transform.position;
         currentNode = initialStartNode;
         nextNode = currentNode;
+    }
+
+    IEnumerator StopTheGuardCounter()
+    {
+        movementSpeed = 6;
+        //isMoving = false;
+        yield return new WaitForSeconds(4.0f);
+        movementSpeed = 4;
+        //isMoving = true;
+    }
+
+    IEnumerator ReadyToStopTheGuardCounter()
+    {
+        isReadytoStopTheGuard = false;
+        yield return new WaitForSeconds(60.0f);
+        isReadytoStopTheGuard = true;
     }
 
     IEnumerator InvisibleCounter()
@@ -161,7 +229,23 @@ public class SpyPath : MonoBehaviour
             {
                 if (isMoving)
                 {
-                    stateText.text = "Spying";
+                    //if (isRedSpy)
+                    //{
+                    if(movementSpeed  == 4)
+                    {
+                        stateText.fontSize = 20;
+                        stateText.text = "Spying";
+                    }
+                    else
+                    {
+                        stateText.fontSize = 16;
+                        stateText.text = "Speed Passing";
+                    }
+                    //}
+                    //else
+                    //{
+                    //    stateText.text = "Speed Spying";
+                    //}
                     transform.Translate((nextNode.transform.position - transform.position).normalized * movementSpeed * Time.deltaTime);
                 }
             }
