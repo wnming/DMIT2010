@@ -1,16 +1,22 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static StateMachine1;
 
 public class StateMachine2 : MonoBehaviour
 {
-    enum StateMachine1State
+    public enum StateMachine2State
     {
-        Freezing,
-        Wandering,
-        Running, //if the state machine2 is in radius
-        Stealing
+        FindingMedicine, //had more then 3 tomatoes 
+        WarningRaining,
+        Cooking,
+        Hiding,
+        //nothing to do
+        EatingTomato //
     }
+
+    public StateMachine2State currentState;
+
     // Start is called before the first frame update
     void Start()
     {
