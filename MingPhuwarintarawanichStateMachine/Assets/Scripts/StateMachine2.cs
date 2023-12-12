@@ -21,7 +21,9 @@ public class StateMachine2 : MonoBehaviour
 
     [SerializeField] GameObject tomato;
     [SerializeField] GameObject umbrella;
-    public GameObject cookingLocation;
+    public GameObject cookingLocation1;
+    public GameObject cookingLocation2;
+    public GameObject currentCookingLocation;
     [SerializeField] GameObject antidote;
 
     [SerializeField] RainController raining;
@@ -40,9 +42,9 @@ public class StateMachine2 : MonoBehaviour
 
     private bool isEating;
 
-    // Start is called before the first frame update
     void Start()
     {
+        currentCookingLocation = cookingLocation1;
         umbrella.SetActive(false);
         tomato.SetActive(false);
         currentState = StateMachine2State.Cooking;
@@ -52,17 +54,16 @@ public class StateMachine2 : MonoBehaviour
         isEating = false;
     }
 
-    // Update is called once per frame
     void Update()
     {
         eatenText.text = "Eaten Tomato: " + numberOfEatenTomatoes;
         switch (currentState)
         {
+            //Cooking
             case StateMachine2State.Cooking:
                 Cooking();
                 if (st1.isInteracting)
                 {
-                    st2.transform.LookAt(st1.transform);
                     currentState = StateMachine2State.EatingTomato;
                 }
                 else
@@ -76,21 +77,20 @@ public class StateMachine2 : MonoBehaviour
                         currentState = StateMachine2State.Cooking;
                     }
                 }
-                // code block
                 break;
-            //LookingForTomatos
+            //EatingTomato
             case StateMachine2State.EatingTomato:
                 EatingTomato();
                 break;
-            //Sharing
+            //FindingAntidote
             case StateMachine2State.FindingAntidote:
                 FindAntidote();
                 break;
-            //Running
+            //GivingUmbrella
             case StateMachine2State.GivingUmbrella:
                 GivingUmbrellaWithSt1();
                 break;
-            //Hiding
+            //DancingInTheRain
             case StateMachine2State.DancingInTheRain:
                 if (raining.isRaining)
                 {
@@ -133,17 +133,16 @@ public class StateMachine2 : MonoBehaviour
     void GivingUmbrellaWithSt1()
     {
         st2Text.text = "Giving an umbrella...";
+        umbrella.SetActive(true);
         if (Vector3.Distance(st2.transform.position, st1.transform.position) < 5)
         {
             st2.isStopped = true;
-            umbrella.SetActive(true);
             StartCoroutine(CountDownGivingUmbrella());
         }
         else
         {
             st2.SetDestination(st1.transform.position);
         }
-        //transform.LookAt(st2.transform);
     }
 
     bool CheckRaining()
@@ -165,6 +164,7 @@ public class StateMachine2 : MonoBehaviour
     void EatingTomato()
     {
         st2Text.text = "Eating a tomato...";
+        st2.transform.LookAt(st1.transform);
         if (!isEating)
         {
             StartCoroutine(DelaySwallowTomato());
@@ -192,10 +192,18 @@ public class StateMachine2 : MonoBehaviour
     void Cooking()
     {
         st2Text.text = "Enjoy cooking...";
-        st2.SetDestination(cookingLocation.transform.position);
-        if(Vector3.Distance(st2.transform.position, cookingLocation.transform.position) < 2)
+        if(Vector3.Distance(st2.transform.position, currentCookingLocation.transform.position) < 2)
         {
-            st2.transform.rotation = Quaternion.Lerp(st2.transform.rotation, cookingLocation.transform.rotation, Time.deltaTime);
+            st2.transform.rotation = Quaternion.Lerp(st2.transform.rotation, currentCookingLocation.transform.rotation, Time.deltaTime);
         }
+        if (Vector3.Distance(st2.transform.position, cookingLocation1.transform.position) < 2)
+        {
+            currentCookingLocation = cookingLocation2;
+        }
+        if (Vector3.Distance(st2.transform.position, cookingLocation2.transform.position) < 2)
+        {
+            currentCookingLocation = cookingLocation1;
+        }
+        st2.SetDestination(currentCookingLocation.transform.position);
     }
 }

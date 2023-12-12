@@ -66,6 +66,7 @@ public class StateMachine1 : MonoBehaviour
         tomatoText.text = "Tomato: " + tomatoesCount;
         switch (currentState)
         {
+            //PlayWithMyDog
             case StateMachine1State.PlayingWithADog:
                 if (CheckRaining()) 
                 {
@@ -107,7 +108,7 @@ public class StateMachine1 : MonoBehaviour
                     {
                         st1.isStopped = true;
                         st1.transform.LookAt(st2.transform);
-                        st1.transform.rotation = Quaternion.Lerp(st2.transform.rotation, transform.rotation, Time.deltaTime);
+                        //st1.transform.rotation = Quaternion.Lerp(st2.transform.rotation, transform.rotation, Time.deltaTime);
                     }
                     Running();
                 }

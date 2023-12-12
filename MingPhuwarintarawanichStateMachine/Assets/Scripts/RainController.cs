@@ -19,7 +19,7 @@ public class RainController : MonoBehaviour
 
     void Update()
     {
-        if(!isRaining && st1.isOkayToRain && Vector3.Distance(st1.transform.position, st1.dogLocation.transform.position) < 3 && st1.currentState == StateMachine1.StateMachine1State.PlayingWithADog && st2.currentState == StateMachine2.StateMachine2State.Cooking && Vector3.Distance(st2.transform.position, st2.cookingLocation.transform.position) < 2)
+        if(!isRaining && st1.isOkayToRain && Vector3.Distance(st1.transform.position, st1.dogLocation.transform.position) < 3 && st1.currentState == StateMachine1.StateMachine1State.PlayingWithADog && st2.currentState == StateMachine2.StateMachine2State.Cooking && Vector3.Distance(st2.transform.position, st2.currentCookingLocation.transform.position) < 2)
         {
             StartCoroutine(MakeRains());
         }
