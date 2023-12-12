@@ -21,7 +21,6 @@ public class TomatoController : MonoBehaviour
         {
             if (tomatoList.Where(x => x.gameObject.activeSelf == true).Count() <= 0)
             {
-                Debug.Log("rannn");
                 tomatoList[Random.Range(0, 4)].gameObject.SetActive(true);
             }
             targetTime = Random.Range(10, 25);
