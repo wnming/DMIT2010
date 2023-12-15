@@ -24,6 +24,7 @@ public class StateMachine2 : MonoBehaviour
     public GameObject cookingLocation1;
     public GameObject cookingLocation2;
     public GameObject currentCookingLocation;
+    [SerializeField] GameObject stove;
     [SerializeField] GameObject antidote;
 
     [SerializeField] RainController raining;
@@ -194,7 +195,9 @@ public class StateMachine2 : MonoBehaviour
         st2Text.text = "Enjoy cooking...";
         if(Vector3.Distance(st2.transform.position, currentCookingLocation.transform.position) < 2)
         {
-            st2.transform.rotation = Quaternion.Lerp(st2.transform.rotation, currentCookingLocation.transform.rotation, Time.deltaTime);
+            st2.transform.rotation = currentCookingLocation.transform.rotation;
+            //st2.transform.LookAt(stove.transform);
+            //st2.transform.rotation = Quaternion.Lerp(st2.transform.rotation, currentCookingLocation.transform.rotation, Time.deltaTime);
         }
         if (Vector3.Distance(st2.transform.position, cookingLocation1.transform.position) < 2)
         {
